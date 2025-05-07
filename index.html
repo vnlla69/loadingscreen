@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Loading Screen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom animation for the loader */
+        @keyframes morph {
+            0%, 100% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; }
+            34% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; }
+            67% { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; } 
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .morph-animation {
+            animation: morph 8s ease-in-out infinite, rotate 20s linear infinite;
+        }
+        
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        
+        /* Smooth transition after loading */
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white h-screen w-screen overflow-hidden">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gray-900 transition-all duration-1000">
+        <div class="relative w-48 h-48 mb-8">
+            <!-- Animated morphing shape -->
+            <div id="morph-shape" class="absolute inset-0 morph-animation bg-gradient-to-tr from-orange-500 to-blue-300 border-4 border-white/30"></div>
+            
+            <!-- Percentage counter in center -->
+            <div id="percentage" class="absolute inset-0 flex items-center justify-center text-3xl font-bold">
+                0%
+            </div>
+            
+            <!-- Circular progress ring (SVG) -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                <circle class="progress-ring__circle" 
+                        stroke="rgba(255,255,255,0.3)" 
+                        stroke-width="6" 
+                        fill="transparent" 
+                        r="45" 
+                        cx="50" 
+                        cy="50"/>
+                <circle id="progress-circle" 
+                        class="progress-ring__circle" 
+                        stroke="#f97316" 
+                        stroke-width="6" 
+                        stroke-linecap="round" 
+                        fill="transparent" 
+                        r="45" 
+                        cx="50" 
+                        cy="50"
+                        stroke-dasharray="283"
+                        stroke-dashoffset="283"/>
+            </svg>
+        </div>
+        
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-blue-300">
+            Loading Portfolio
+        </h1>
+        
+        <div class="w-64 h-1.5 bg-gray-700 rounded-full overflow-hidden mb-6">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-orange-500 to-blue-300 rounded-full" style="width: 0%"></div>
+        </div>
+        
+        <div class="flex space-x-2">
+            <div class="w-2 h-2 bg-blue-300 rounded-full animate-pulse" style="animation-delay: 0s"></div>
+            <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+            <div class="w-2 h-2 bg-blue-300 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+        </div>
+        
+        <p class="mt-8 text-gray-400 text-sm">
+            <span id="loading-text">Initializing creative assets...</span>
+            <span class="blinking-cursor"></span>
+        </p>
+    </div>
+    
+    <!-- Main content that will appear after loading -->
+    <main id="main-content" class="hidden h-full w-full flex items-center justify-center">
+        <div class="text-center p-8">
+            <h1 class="text-4xl font-bold mb-4">Welcome to My Portfolio</h1>
+            <p class="text-xl text-gray-300">Loading complete. Enjoy exploring my work!</p>
+            <a href="index.html" id="redirect-btn" class="mt-6 px-6 py-2 bg-orange-500 hover:bg-orange-600 rounded-full transition-all inline-block">
+                Continue to Portfolio
+            </a>
+            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" id="redirect-btn" class="mt-6 px-6 py-2 bg-orange-500 hover:bg-orange-600 rounded-full transition-all inline-block">
+                Check This Video Out
+            </a>
+        </div>
+    </main>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            const percentage = document.getElementById('percentage');
+            const progressBar = document.getElementById('progress-bar');
+            const progressCircle = document.getElementById('progress-circle');
+            const loadingText = document.getElementById('loading-text');
+            const mainContent = document.getElementById('main-content');
+            const morphShape = document.getElementById('morph-shape');
+            
+            const circumference = 2 * Math.PI * 45;
+            const radius = 45;
+            progressCircle.style.strokeDasharray = circumference;
+            progressCircle.style.strokeDashoffset = circumference;
+            
+            const texts = [
+                "Loading creative assets...",
+                "Setting up typography...",
+                "Initializing animations...",
+                "Preparing projects showcase...",
+                "Finalizing details...",
+                "Almost there...",
+                "Probably Doing Something in the Background...",
+                "Never Gonna Give You Up"
+            ];
+            
+            // Set the total duration to be between 10-15 seconds
+            const totalDuration = 12000; // 12 seconds without considering the pause
+            const totalSteps = 100;
+            const stepDuration = totalDuration / totalSteps;
+            const stuckPercentage = 69; // Where to get stuck
+            const stuckDuration = 10000; // How long to stay stuck (10 seconds)
+            
+            let progress = 0;
+            let isStuck = false;
+            
+            function updateProgress(value) {
+                // Update percentage
+                percentage.textContent = `${value}%`;
+                
+                // Update progress bar
+                progressBar.style.width = `${value}%`;
+                
+                // Update circular progress
+                const offset = circumference - (value / 100) * circumference;
+                progressCircle.style.strokeDashoffset = offset;
+            }
+            
+            function continueLoading() {
+                // The main loading function that runs on an interval
+                const loadingInterval = setInterval(() => {
+                    // If we've reached 69%, get stuck
+                    if (progress === stuckPercentage && !isStuck) {
+                        isStuck = true;
+                        clearInterval(loadingInterval); // Stop the loading interval
+                        
+                        // Update loading text to indicate we're stuck
+                        loadingText.textContent = "Loading Stuck... Type '/unstuck' To Continue...";
+                        loadingText.classList.add("text-orange-500", "font-semibold");
+                        
+                        // After 10 seconds, resume loading
+                        setTimeout(() => {
+                            // Remove stuck indicators
+                            loadingText.classList.remove("text-orange-500", "font-semibold");
+                            
+                            // Continue with normal loading messages
+                            const randomText = texts[Math.floor(Math.random() * texts.length)];
+                            loadingText.textContent = randomText;
+                            
+                            // Resume loading by incrementing past the stuck percentage
+                            progress = stuckPercentage + 1;
+                            updateProgress(progress);
+                            
+                            // Restart the interval to continue loading
+                            continueLoading();
+                        }, stuckDuration);
+                        
+                        return;
+                    }
+                    
+                    progress += 1;
+                    if (progress > 100) {
+                        clearInterval(loadingInterval);
+                        
+                        // Hide loading screen
+                        loadingScreen.classList.add('fade-out');
+                        
+                        // Show main content after delay
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                            mainContent.classList.remove('hidden');
+                        }, 500);
+                        
+                        return;
+                    }
+                    
+                    updateProgress(progress);
+                    
+                    // Update loading text every 15%
+                    if (progress % 15 === 0 && progress !== stuckPercentage) {
+                        const randomText = texts[Math.floor(Math.random() * texts.length)];
+                        loadingText.textContent = randomText;
+                    }
+                    
+                }, stepDuration);
+            }
+            
+            // Start the loading process
+            continueLoading();
+        });
+    </script>
+</body>
+</html>
